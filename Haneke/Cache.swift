@@ -102,6 +102,29 @@ public class Cache<T: DataConvertible where T.Result == T, T : DataRepresentable
     public func fetch(fetcher fetcher : Fetcher<T>, formatName: String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
         let key = fetcher.key
         let fetch = Cache.buildFetch(failure: fail, success: succeed)
+        self.fetch(key: key, formatName: formatName, failure: { error in
+            if error?.code == HanekeGlobals.Cache.ErrorCode.FormatNotFound.rawValue {
+                fetch.fail(error)
+            }
+            
+            if let (format, _, _) = self.formats[formatName] {
+                self.fetchAndSet(fetcher, format: format, failure: {error in
+                    fetch.fail(error)
+                }) {value in
+                    fetch.succeed(value)
+                }
+            }
+            
+            // Unreachable code. Formats can't be removed from Cache.
+        }) { value in
+            fetch.succeed(value)
+        }
+        return fetch
+    }
+    
+    public func synfetch(fetcher fetcher : Fetcher<T>, formatName: String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+        let key = fetcher.key
+        let fetch = Cache.buildFetch(failure: fail, success: succeed)
         if let (format, _, _) = self.formats[formatName] {
             self.fetchAndSet(fetcher, format: format, failure: {error in
                 fetch.fail(error)
