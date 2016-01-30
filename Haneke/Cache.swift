@@ -320,4 +320,9 @@ public class Cache<T: DataConvertible where T.Result == T, T : DataRepresentable
         return self.fetch(fetcher: fetcher, formatName: formatName, failure: fail, success: succeed)
     }
     
+    public func synfetch(URL URL : NSURL, formatName: String = HanekeGlobals.Cache.OriginalFormatName,  failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+        let fetcher = NetworkFetcher<T>(URL: URL)
+        return self.synfetch(fetcher: fetcher, formatName: formatName, failure: fail, success: succeed)
+    }
+    
 }
